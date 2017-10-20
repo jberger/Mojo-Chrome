@@ -1,8 +1,8 @@
 package Mojo::Chrome;
 
-use 5.16.0;
-
 use Mojo::Base 'Mojo::EventEmitter';
+
+use 5.16.0;
 
 use Carp ();
 use Mojo::IOLoop;
@@ -13,10 +13,53 @@ use Scalar::Util ();
 
 has host => '127.0.0.1';
 has port => sub { Mojo::IOLoop::Server->generate_port };
-has tx   => sub { Carp::croak 'Not connected' };
+has 'tx';
 has ua   => sub { Mojo::UserAgent->new };
 
-sub connect {
+# high level method to load a page
+# takes the same arguments as Page.navigate
+sub load_page {
+  my ($self, $navigate, $cb) = @_;
+  Scalar::Util::weaken $self;
+  Mojo::IOLoop->delay(
+    sub { $self->send_command('Page.enable', shift->begin) }, # ensure we get updates
+    sub {
+      my ($delay, $err) = @_;
+      die $err if $err;
+      $self->send_command('Page.navigate', $navigate, shift->begin);
+    },
+    sub {
+      my ($delay, $err, $result) = @_;
+      die $err if $err;
+      die 'No frameId was received'
+        unless my $frame_id = $result->{frameId};
+      my $end = $delay->begin(0);
+      $self->on('Page.frameStoppedLoading', sub {
+        my ($self, $params) = @_;
+        return unless $params->{frameId} = $frame_id;
+        $self->unsubscribe('Page.frameStoppedLoading', __SUB__);
+        $end->();
+      });
+    },
+    sub { $self->$cb(undef) },
+  )->catch(sub{ $self->$cb($_[-1]) })->wait;
+}
+
+sub send_command {
+  my $cb = ref $_[-1] eq 'CODE' ? pop : sub {};
+  my ($self, $method, $params) = @_;
+  my $payload = {
+    method => $method,
+    params => $params,
+  };
+  $self->_send($payload, sub {
+    my ($self, $error, $json) = @_;
+    # can errors come on the json result?
+    $self->$cb($error, $json ? $json->{result} : undef);
+  });
+}
+
+sub _connect {
   my ($self, $cb) = @_;
   my $url = Mojo::URL->new->host($self->host)->port($self->port)->scheme('http')->path('/json');
 
@@ -36,7 +79,7 @@ sub connect {
         if (my $id = delete $payload->{id}) {
           my $cb = delete $self->{cb}{$id};
           return $self->emit(error => "callback not found: $id") unless $cb;
-          $self->$cb($payload);
+          $self->$cb(undef, $payload);
         } elsif (exists $payload->{method}) {
           $self->emit(@{$payload}{qw/method params/});
         } else {
@@ -45,55 +88,23 @@ sub connect {
       });
       $tx->on(finish => sub { delete $self->{tx} });
       $self->tx($tx);
-      $self->$cb();
+      $self->$cb(undef);
     },
   )->catch(sub{ $self->$cb($_[1]) })->wait;
 }
 
-# high level method to load a page
-# takes the same arguments as Page.navigate
-sub load_page {
-  my ($self, $navigate, $cb) = @_;
-  Scalar::Util::weaken $self;
-  Mojo::IOLoop->delay(
-    sub { $self->send_command('Page.enable', shift->begin) }, # ensure we get updates
-    sub { $self->send_command('Page.navigate', $navigate, shift->begin) },
-    sub {
-      my ($delay, $result) = @_;
-      die 'No frameId was received'
-        unless my $frame_id = $result->{frameId};
-      my $end = $delay->begin(0);
-      $self->on('Page.frameStoppedLoading', sub {
-        my ($self, $params) = @_;
-        return unless $params->{frameId} = $frame_id;
-        $self->unsubscribe('Page.frameStoppedLoading', __SUB__);
-        $end->();
-      });
-    },
-    sub { $self->$cb() },
-  )->catch(sub{ $self->$cb($_[-1]) })->wait;
-}
-
-# low level protocal send
-sub send {
+sub _send {
   my ($self, $payload, $cb) = @_;
+
+  return $self->_connect(sub{
+    my ($self, $err) = @_;
+    return $self->$cb($err, undef) if $err;
+    $self->_send($payload, $cb);
+  }) unless my $tx = $self->tx;
+
   my $id = ++$self->{id};
   $self->{cb}{$id} = $cb;
-  $self->tx->send({json => {%$payload, id => $id}});
-}
-
-# mid level protocal send command and extract resultd
-sub send_command {
-  my $cb = ref $_[-1] eq 'CODE' ? pop : sub {};
-  my ($self, $method, $params) = @_;
-  my $payload = {
-    method => $method,
-    params => $params,
-  };
-  $self->send($payload, sub {
-    my ($self, $json) = @_;
-    $self->$cb($json->{result});
-  });
+  $tx->send({json => {%$payload, id => $id}});
 }
 
 1;
