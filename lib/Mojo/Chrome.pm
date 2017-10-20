@@ -11,6 +11,8 @@ use Mojo::URL;
 use Mojo::UserAgent;
 use Scalar::Util ();
 
+use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
+
 has host => '127.0.0.1';
 has port => sub { Mojo::IOLoop::Server->generate_port };
 has 'tx';
@@ -76,6 +78,7 @@ sub _connect {
       my (undef, $tx) = @_;
       $tx->on(json => sub {
         my (undef, $payload) = @_;
+        print STDERR 'Received: ' . Mojo::Util::dumper $payload if DEBUG;
         if (my $id = delete $payload->{id}) {
           my $cb = delete $self->{cb}{$id};
           return $self->emit(error => "callback not found: $id") unless $cb;
@@ -104,7 +107,9 @@ sub _send {
 
   my $id = ++$self->{id};
   $self->{cb}{$id} = $cb;
-  $tx->send({json => {%$payload, id => $id}});
+  my $send = {%$payload, id => $id};
+  print STDERR 'Sending: ' . Mojo::Util::dumper $send if DEBUG;
+  $tx->send({json => $send});
 }
 
 1;
