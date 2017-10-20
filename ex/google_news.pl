@@ -17,8 +17,7 @@ my $get = 'https://news.google.com/news/?ned=us&hl=en';
 my $js = <<'JS';
 var sel = '[role="heading"][aria-level="2"]';
 var headings = document.querySelectorAll(sel);
-headings = [].slice.call(headings).map((link)=>{return link.innerText});
-JSON.stringify(headings);
+[].slice.call(headings).map((link)=>{return link.innerText});
 JS
 
 $chrome->catch(sub{ warn $_[1] });
@@ -26,10 +25,10 @@ $chrome->catch(sub{ warn $_[1] });
 Mojo::IOLoop->delay(
   sub { $chrome->connect(9000, shift->begin) },
   sub { $chrome->load_page({url => $get}, shift->begin) },
-  sub { $chrome->send_command('Runtime.evaluate', { expression => $js }, shift->begin) },
+  sub { $chrome->send_command('Runtime.evaluate', { expression => $js, returnByValue => \1 }, shift->begin) },
   sub {
     my ($delay, $payload) = @_;
-    my $result = Mojo::JSON::from_json($payload->{result}{value});
+    my $result = $payload->{result}{value};
     say for @$result;
   }
 )->wait;
