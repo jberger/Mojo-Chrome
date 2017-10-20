@@ -6,17 +6,19 @@ use Mojo::Base 'Mojo::EventEmitter';
 
 use Carp ();
 use Mojo::IOLoop;
+use Mojo::IOLoop::Server;
 use Mojo::URL;
 use Mojo::UserAgent;
 use Scalar::Util ();
 
-has tx => sub { Carp::croak 'Not connected' };
-has ua => sub { Mojo::UserAgent->new };
+has host => '127.0.0.1';
+has port => sub { Mojo::IOLoop::Server->generate_port };
+has tx   => sub { Carp::croak 'Not connected' };
+has ua   => sub { Mojo::UserAgent->new };
 
 sub connect {
-  my ($self, $server, $cb) = @_;
-  $server = {port => $server} unless ref $server;
-  my $url = Mojo::URL->new->host($server->{host} // '127.0.0.1')->port($server->{port})->scheme('http')->path('/json');
+  my ($self, $cb) = @_;
+  my $url = Mojo::URL->new->host($self->host)->port($self->port)->scheme('http')->path('/json');
 
   Scalar::Util::weaken $self;
   Mojo::IOLoop->delay(
