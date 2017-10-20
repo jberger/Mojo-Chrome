@@ -9,10 +9,13 @@ use Mojo::IOLoop;
 use Mojo::IOLoop::Server;
 use Mojo::URL;
 use Mojo::UserAgent;
+use Mojolicious;
 use Scalar::Util ();
 
 use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
 
+has chrome_path => sub { die 'chrome_path not set' };
+has chrome_options => sub { ['--headless' ] }; # '--disable-gpu'
 has host => '127.0.0.1';
 has port => sub { Mojo::IOLoop::Server->generate_port };
 has 'tx';
@@ -96,6 +99,15 @@ sub _connect {
   )->catch(sub{ $self->$cb($_[1]) })->wait;
 }
 
+sub _kill {
+  my ($self) = @_;
+  return unless my $pid = delete $self->{pid};
+  print STDERR "Killing $pid\n" if DEBUG;
+  kill KILL => $pid;
+  waitpid $pid, 0;
+  delete $self->{pipe};
+}
+
 sub _send {
   my ($self, $payload, $cb) = @_;
 
@@ -111,6 +123,33 @@ sub _send {
   print STDERR 'Sending: ' . Mojo::Util::dumper $send if DEBUG;
   $tx->send({json => $send});
 }
+
+sub _spawn {
+  my ($self, $cb) = @_;
+  Scalar::Util::weaken $self;
+
+  # once chrome has started up it will call this server
+  # that call let's us know that it is up and going
+  my $start_server = Mojo::Server::Daemon->new(silent => 1);
+  $start_server->app(Mojolicious->new)->app->routes->get('/' => sub {
+    my $c = shift;
+    $c->tx->on(finish => sub { $self->$cb(); undef $start_server; });
+    $c->rendered(204);
+  });
+  my $start_port = $start_server->listen(["http://127.0.0.1"])->start->ports->[0];
+
+  my $ws_port = $self->port;
+  my @command = ($self->chrome_path, @{ $self->chrome_options }, "--remote-debugging-port=$ws_port", "http://127.0.0.1:$start_port");
+  say STDERR 'Spawning: ' . (join ', ', map { "'$_'" } @command) if DEBUG;
+  $self->{pid} = open $self->{pipe}, '-|', @command;
+  die 'Could not spawn' unless defined $self->{pid};
+}
+
+sub DESTROY {
+  return if defined ${^GLOBAL_PHASE} && ${^GLOBAL_PHASE} eq 'DESTRUCT';
+  shift->_kill;
+}
+
 
 1;
 
