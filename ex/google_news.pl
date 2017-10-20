@@ -24,7 +24,6 @@ var headings = document.querySelectorAll(sel);
 JS
 
 Mojo::IOLoop->delay(
-  sub { $chrome->_spawn(shift->begin) },
   sub { $chrome->load_page({url => $get}, shift->begin) },
   sub {
     my ($delay, $err) = @_;
