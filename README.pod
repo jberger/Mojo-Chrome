@@ -1,0 +1,31 @@
+=head1 NAME
+
+Mojo-Chrome - A Mojo interface to Chrome DevTools Protocol
+
+=head1 DESCRIPTION
+
+=head1 PROTOCOL DOCUMENTATION
+
+=over
+
+=item L<https://chromedevtools.github.io/devtools-protocol>
+
+=item L<https://developers.google.com/web/updates/2017/04/headless-chrome>
+
+=back
+
+=head1 SOURCE REPOSITORY
+
+L<http://github.com/jberger/Mojo-Chrome>
+
+=head1 AUTHOR
+
+Joel Berger, E<lt>joel.a.berger@gmail.comE<gt>
+
+=head1 CONTRIBUTORS
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2017 by L</AUTHOR> and L</CONTRIBUTORS>.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
