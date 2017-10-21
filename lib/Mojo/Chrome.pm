@@ -27,6 +27,23 @@ has host => '127.0.0.1';
 has [qw/port tx/];
 has ua   => sub { Mojo::UserAgent->new };
 
+# high level method to evaluate jacascript in the page context
+# error is structured, Mojo::Chrome errors are upgraded to it with exceptionId set to -1
+sub evaluate {
+  my ($self, $js, $cb) = @_;
+
+  $self->send_command('Runtime.evaluate', { expression => $js, returnByValue => \1 }, sub {
+    my ($self, $err, $payload) = @_;
+    if ($err && !ref $err) {
+      $err = { exceptionId => -1, text => $err };
+    } elsif (exists $payload->{exceptionId}) {
+      $err = $payload;
+    }
+    return $self->$cb($err, undef) if $err;
+    $self->$cb(undef, $payload->{result}{value});
+  });
+}
+
 # high level method to load a page
 # takes the same arguments as Page.navigate
 sub load_page {
