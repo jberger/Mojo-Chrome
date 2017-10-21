@@ -5,6 +5,7 @@ use Mojo::Base 'Mojo::EventEmitter';
 use 5.16.0;
 
 use Carp ();
+use IPC::Cmd ();
 use Mojo::IOLoop;
 use Mojo::IOLoop::Server;
 use Mojo::URL;
@@ -14,7 +15,13 @@ use Scalar::Util ();
 
 use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
 
-has chrome_path => sub { die 'chrome_path not set' };
+has chrome_path => sub {
+  my $path = $^O eq 'darwin'
+    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    : IPC::Cmd::can_run 'google-chrome';
+  return $path if $path && -f $path && -x _;
+  die 'chrome_path not set and could not be determined';
+};
 has chrome_options => sub { ['--headless' ] }; # '--disable-gpu'
 has host => '127.0.0.1';
 has [qw/port tx/];

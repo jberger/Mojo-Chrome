@@ -7,9 +7,7 @@ use Mojo::JSON;
 binmode(STDOUT, ":utf8");
 $|++;
 
-my $chrome = Mojo::Chrome->new
-  ->chrome_path('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
-  ->catch(sub{ warn $_[1] });
+my $chrome = Mojo::Chrome->new->catch(sub{ warn $_[1] });
 
 # this is the example from https://medium.com/@lagenar/using-headless-chrome-via-the-websockets-interface-5f498fb67e0f
 # archived at https://web.archive.org/web/20171020022803/https://medium.com/@lagenar/using-headless-chrome-via-the-websockets-interface-5f498fb67e0f
