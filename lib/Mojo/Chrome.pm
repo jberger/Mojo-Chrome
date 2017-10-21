@@ -45,9 +45,15 @@ sub evaluate {
 }
 
 # high level method to load a page
-# takes the same arguments as Page.navigate
+# takes url or a hash accepting the same arguments as Page.navigate
 sub load_page {
   my ($self, $navigate, $cb) = @_;
+
+  # strings etc are url
+  $navigate = { url => $navigate } unless ref $navigate eq 'HASH';
+  # explicitly stringify url
+  $navigate->{url} = "$navigate->{url}" if ref $navigate->{url};
+
   Scalar::Util::weaken $self;
   Mojo::IOLoop->delay(
     sub { $self->send_command('Page.enable', shift->begin) }, # ensure we get updates

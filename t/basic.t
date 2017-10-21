@@ -13,7 +13,7 @@ my $chrome = Mojo::Chrome->new;
 
 my $result;
 Mojo::IOLoop->delay(
-  sub { $chrome->load_page({url => "$url"}, shift->begin) },
+  sub { $chrome->load_page($url, shift->begin) },
   sub {
     my ($delay, $err) = @_;
     die $err if $err;
