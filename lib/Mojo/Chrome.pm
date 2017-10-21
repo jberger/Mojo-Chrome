@@ -158,11 +158,15 @@ sub _spawn {
   # once chrome has started up it will call this server
   # that call let's us know that it is up and going
   my $start_server = Mojo::Server::Daemon->new(silent => 1);
-  $start_server->app(Mojolicious->new)->app->routes->get('/' => sub {
-    my $c = shift;
-    $c->tx->on(finish => sub { $self->$cb(); undef $start_server; });
-    $c->rendered(204);
-  });
+  $start_server
+    ->app(Mojolicious->new)->app
+    ->tap(sub{$_->log->level('fatal')})
+    ->routes
+    ->get('/' => sub {
+      my $c = shift;
+      $c->tx->on(finish => sub { $self->$cb(); undef $start_server; });
+      $c->rendered(204);
+    });
   my $start_port = $start_server->listen(["http://127.0.0.1"])->start->ports->[0];
 
   my $ws_port = $self->port;
