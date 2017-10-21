@@ -30,6 +30,7 @@ Mojo::IOLoop->delay(
   },
   sub {
     my ($delay, $err, $payload) = @_;
+    die $err if $err;
     my $result = $payload->{result}{value};
     say for @$result;
   }

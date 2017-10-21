@@ -83,6 +83,7 @@ sub _connect {
 
       # otherwise try to connect to an existing chrome (perhaps one we've already spawned)
       my $url = Mojo::URL->new->host($self->host)->port($port)->scheme('http')->path('/json');
+      say STDERR "Initial request to chrome: $url" if DEBUG;
       $self->ua->get($url, $delay->begin);
     },
     sub {
@@ -100,6 +101,8 @@ sub _connect {
       }
 
       my $ws = $tx->res->json('/0/webSocketDebuggerUrl');
+      die 'Could not determine websocket url to chrome dev tools' unless $ws;
+      say STDERR "Connecting to chrome devtools via websocket: $ws" if DEBUG;
       $self->ua->websocket($ws, $delay->begin);
     },
     sub {
@@ -164,6 +167,7 @@ sub _spawn {
     ->routes
     ->get('/' => sub {
       my $c = shift;
+      say STDERR 'Got start server request from chrome' if DEBUG;
       $c->tx->on(finish => sub { $self->$cb(); undef $start_server; });
       $c->rendered(204);
     });
