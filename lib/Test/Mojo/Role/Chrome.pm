@@ -19,7 +19,7 @@ sub chrome_load_ok {
   $self->chrome->load_page($navigate, sub {
     (undef, $err) = @_;
     $ok = 1 unless $err;
-    Mojo::IOLoop->next_tick(sub{ Mojo::IOLoop->stop });
+    Mojo::IOLoop->stop;
   });
   Mojo::IOLoop->start;
 
@@ -39,7 +39,7 @@ sub chrome_evaluate_ok {
   $self->chrome->evaluate($js, sub {
     (undef, $err, $result) = @_;
     $ok = 1 unless $err;
-    Mojo::IOLoop->next_tick(sub{ Mojo::IOLoop->stop });
+    Mojo::IOLoop->stop;
   });
   Mojo::IOLoop->start;
 
