@@ -5,6 +5,7 @@ use Mojo::Base -strict;
 use Mojo::Chrome;
 use Mojo::Util;
 use Test2::API ();
+use Test::More ();
 
 __PACKAGE__->Mojo::Base::attr(chrome => sub { Mojo::Chrome->new });
 __PACKAGE__->Mojo::Base::attr('chrome_result');
@@ -52,8 +53,17 @@ sub chrome_evaluate_ok {
 }
 
 sub chrome_result_is {
+  my $self = shift;
+  my ($p, $expect) = @_ > 1 ? (shift, shift) : ('', shift);
+  my $desc = $_desc->(shift, qq{exact match for JSON Pointer "$p"});
+  my $data = Mojo::JSON::Pointer->new($self->chrome_result)->get($p);
 
+  my $ctx = Test2::API::context();
+  $self->success(Test::More::is_deeply($data, $expect, $desc));
+  $ctx->release;
+  $self;
 }
+
 
 1;
 

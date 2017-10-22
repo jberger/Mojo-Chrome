@@ -9,9 +9,8 @@ my $t = Test::Mojo->with_roles('+Chrome')->new;
 my $url = $t->ua->server->nb_url;
 
 $t->chrome_load_ok($url)
-  ->chrome_evaluate_ok(q!document.getElementsByTagName('p')[0].innerHTML!);
-
-is $t->chrome_result, 'Goodbye', 'correct updated result';
+  ->chrome_evaluate_ok(q!document.getElementsByTagName('p')[0].innerHTML!)
+  ->chrome_result_is('Goodbye');
 
 done_testing;
 
