@@ -130,6 +130,8 @@ sub _connect {
     },
     sub {
       my (undef, $tx) = @_;
+      Mojo::IOLoop->stream($tx->connection)->timeout(0);
+
       $tx->on(json => sub {
         my (undef, $payload) = @_;
         print STDERR 'Received: ' . Mojo::Util::dumper $payload if DEBUG;
