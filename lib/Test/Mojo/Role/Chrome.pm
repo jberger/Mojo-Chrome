@@ -9,9 +9,11 @@ use Test2::API ();
 __PACKAGE__->Mojo::Base::attr(chrome => sub { Mojo::Chrome->new });
 __PACKAGE__->Mojo::Base::attr('chrome_result');
 
+my $_desc = sub { Mojo::Util::encode 'UTF-8', shift || shift };
+
 sub chrome_load_ok {
   my ($self, $navigate, $desc) = @_;
-  $desc ||= 'Chrome navigate to page';
+  $desc = $_desc->($desc, 'Chrome navigate to page');
   my $ctx = Test2::API::context();
 
   my $ok = 0;
@@ -31,7 +33,7 @@ sub chrome_load_ok {
 
 sub chrome_evaluate_ok {
   my ($self, $js, $desc) = @_;
-  $desc ||= 'Chrome evaluate';
+  $desc = $_desc->($desc, 'Chrome evaluate');
   my $ctx = Test2::API::context();
 
   my $ok = 0;
