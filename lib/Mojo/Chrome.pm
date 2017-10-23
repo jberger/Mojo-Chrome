@@ -4,6 +4,9 @@ use Mojo::Base 'Mojo::EventEmitter';
 
 use 5.16.0;
 
+our $VERSION = '0.01';
+$VERSION = eval $VERSION;
+
 use Carp ();
 use IPC::Cmd ();
 use Mojo::IOLoop;
