@@ -33,7 +33,10 @@ has ua   => sub { Mojo::UserAgent->new };
 sub evaluate {
   my ($self, $js, $cb) = @_;
 
-  $self->send_command('Runtime.evaluate', { expression => $js, returnByValue => \1 }, sub {
+  # string value is a javascript expression
+  $js = { expression => $js, returnByValue => \1 } unless ref $js eq 'HASH';
+
+  $self->send_command('Runtime.evaluate', $js, sub {
     my ($self, $err, $payload) = @_;
     if ($err && !ref $err) {
       $err = { exceptionId => -1, text => $err };
