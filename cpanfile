@@ -1,6 +1,8 @@
 requires 'perl' => '5.16.0';
 requires 'Mojolicious', '7.0';
 requires 'IPC::Cmd';
+requires 'Role::Tiny';
+requires 'Test::Simple', '1.302015'; # Test2
 
 configure_requires 'IPC::Cmd';
 configure_requires 'Module::Build::Tiny';
