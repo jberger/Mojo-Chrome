@@ -7,7 +7,9 @@ use Mojo::Util;
 use Test2::API ();
 use Test::More ();
 
-__PACKAGE__->Mojo::Base::attr(chrome => sub { Mojo::Chrome->new });
+__PACKAGE__->Mojo::Base::attr(chrome => sub {
+  Mojo::Chrome->new(base => shift->ua->server->nb_url);
+});
 __PACKAGE__->Mojo::Base::attr('chrome_result');
 
 my $_desc = sub { Mojo::Util::encode 'UTF-8', shift || shift };

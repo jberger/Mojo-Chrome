@@ -6,9 +6,8 @@ use Test::More;
 use Test::Mojo;
 
 my $t = Test::Mojo->with_roles('+Chrome')->new;
-my $url = $t->ua->server->nb_url;
 
-$t->chrome_load_ok($url)
+$t->chrome_load_ok('/')
   ->chrome_evaluate_ok(q!document.getElementsByTagName('p')[0].innerHTML!)
   ->chrome_result_is('Goodbye');
 

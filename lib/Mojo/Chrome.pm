@@ -15,6 +15,7 @@ use Scalar::Util ();
 
 use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
 
+has base => sub { Mojo::URL->new };
 has chrome_path => sub {
   my $path = $^O eq 'darwin'
     ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -47,12 +48,17 @@ sub evaluate {
 # high level method to load a page
 # takes url or a hash accepting the same arguments as Page.navigate
 sub load_page {
-  my ($self, $navigate, $cb) = @_;
+  my ($self, $nav, $cb) = @_;
 
   # strings etc are url
-  $navigate = { url => $navigate } unless ref $navigate eq 'HASH';
-  # explicitly stringify url
-  $navigate->{url} = "$navigate->{url}" if ref $navigate->{url};
+  $nav = { url => $nav } unless ref $nav eq 'HASH';
+
+  my $url = Mojo::URL->new("$nav->{url}");
+  unless ($url->is_abs) {
+    my $base = $self->base;
+    $url = $url->scheme($base->scheme)->host($base->host)->port($base->port);
+  }
+  $nav->{url} = $url->to_string;
 
   Scalar::Util::weaken $self;
   Mojo::IOLoop->delay(
@@ -60,7 +66,7 @@ sub load_page {
     sub {
       my ($delay, $err) = @_;
       die $err if $err;
-      $self->send_command('Page.navigate', $navigate, shift->begin);
+      $self->send_command('Page.navigate', $nav, shift->begin);
     },
     sub {
       my ($delay, $err, $result) = @_;
