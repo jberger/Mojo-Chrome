@@ -31,5 +31,5 @@ Mojo::IOLoop->delay(
     die Mojo::Util::dumper $err if $err;
     say for @$result;
   }
-)->catch(sub{ warn $_[1] })->wait;
+)->tap(on => error => sub{ warn $_[1] })->wait;
 

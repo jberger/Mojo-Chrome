@@ -88,7 +88,7 @@ sub load_page {
       });
     },
     sub { $self->$cb(undef) },
-  )->catch(sub{ $self->$cb($_[-1]) });
+  )->on(error => sub{ $self->$cb($_[-1]) });
 }
 
 sub send_command {
@@ -161,7 +161,7 @@ sub _connect {
       $self->tx($tx);
       $self->$cb(undef);
     },
-  )->catch(sub{ $self->$cb($_[1]) });
+  )->on(error => sub{ $self->$cb($_[1]) });
 }
 
 sub _kill {
