@@ -5,10 +5,17 @@ Mojo-Chrome - A Mojo interface to Chrome DevTools Protocol
 =head1 DESCRIPTION
 
 L<Mojo::Chrome> is an interface to the Chrome DevTools Protocol which allows interaction with a (possibly headless) chrome instance.
+While L<Mojo::Chrome> is primarily intended as a backbone for L<Test::Mojo::Role::Chrome>, this is not its only purpose.
+
 Communication is bidirectional and asynchronous via an internal websocket.
 Both request/response and push-events are commonplace, though this module does its best to simplify things.
 
-While L<Mojo::Chrome> is primarily intended as a backbone for L<Test::Mojo::Role::Chrome>.this is not its only purpose.
+This module is the spiritual successor to L<Mojo::Phantom> which interfaced with the headless phantomjs application.
+That project was abandoned after the headless chrome functionality was announced.
+
+L<Mojo::Phantom> had many short-cuts that were intended to smooth out the experience since communication was essentially unidirectional after the page load and the process or at least the page state was ephemeral.
+Because of the robust communication afforded by the Chrome DevTools Protocol many of those short-cuts will not be replicated for C<Mojo::Chome>.
+However with the increased power the author suspects that new short-cuts will be desirable, suggestions are welcome.
 
 =head1 CAVEATS
 
