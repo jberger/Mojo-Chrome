@@ -8,7 +8,7 @@ our $VERSION = '0.01';
 $VERSION = eval $VERSION;
 
 use Carp ();
-use IPC::Cmd ();
+use Mojo::Chrome::Util;
 use Mojo::IOLoop;
 use Mojo::IOLoop::Server;
 use Mojo::URL;
@@ -20,11 +20,8 @@ use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
 
 has base => sub { Mojo::URL->new };
 has chrome_path => sub {
-  my $path = $^O eq 'darwin'
-    ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    : IPC::Cmd::can_run 'google-chrome';
-  return $path if $path && -f $path && -x _;
-  die 'chrome_path not set and could not be determined';
+  Mojo::Chrome::Util::chrome_executable()
+    or Carp::croak 'chrome_path not set and could not be determined';
 };
 has chrome_options => sub { ['--headless' ] }; # '--disable-gpu'
 has host => '127.0.0.1';
