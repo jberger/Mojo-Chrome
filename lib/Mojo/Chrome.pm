@@ -239,6 +239,68 @@ Mojo-Chrome - A Mojo interface to Chrome DevTools Protocol
 
 =head1 DESCRIPTION
 
+L<Mojo::Chrome> is an interface to the Chrome DevTools Protocol which allows interaction with a (possibly headless) chrome instance.
+Communication is bidirectional and asynchronous via an internal websocket.
+Both request/response and push-events are commonplace, though this module does its best to simplify things.
+
+While L<Mojo::Chrome> is primarily intended as a backbone for L<Test::Mojo::Role::Chrome>.this is not its only purpose.
+
+=head1 CAVEATS
+
+This module is nwe and changes may occur.
+High level functionality should be fairly stable.
+
+The protocol itself is fairly new and largely undocumented, especially in usage documentation.
+If this module skews from the protocol in newer versions of chrome please alert the author via the bug tracker.
+Incompatibilites can hopefully be smoothed out in the module however where this isn't possible the author intends to target newer versions of chrome rather than support a long tail of chrome version.
+
+=head1 EVENTS
+
+L<Mojo::Chrome> inherits all of the events from L<Mojo::EventEmitter>.
+Further it emits events that arrive from the protocol as they arrive.
+Per the protocol most events are disabled initially, though some methods will enable and subscribe to events as a matter of course.
+
+Eventually this documentation might suggest best practices or contain other functionality to moderate events.
+For the time being simply consider that fact, especially when disabling protocol events.
+
+=head1 ATTRIBUTES
+
+L<Mojo::Chrome> inherits all of the attributes from L<Mojo::EventEmitter> and implements the following new ones.
+
+=head2 base
+
+A base url used to make relative urls absolute.
+Must be an instance of L<Mojo::URL> or api compatible class.
+
+=head2 chrome_path
+
+Path to the chrome executable.
+Default is to use L<Mojo::Chrome::Util/chrome_executable> to discover it.
+
+=head2 chrome_options
+
+An array reference containing additional command line arguments to pass when executing chrome.
+The default includes C<--headless>, it does not include C<--disable-gpu> thought that is a common usage.
+
+=head2 host
+
+The IP address of the host running chrome.
+By default this is C<127.0.0.1>, namely the current host.
+
+=head2 port
+
+The port of the chrome process.
+The default is to open an unused port.
+This should be specified if a remote chrome instance (see C</host>).
+
+=head2 tx
+
+The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
+
+=head2 ua
+
+The L<Mojo::UserAgent> object used to open the connection to chrome if necessary.
+
 =head1 PROTOCOL DOCUMENTATION
 
 =over
