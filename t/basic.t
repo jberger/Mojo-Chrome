@@ -24,7 +24,7 @@ Mojo::IOLoop->delay(
     die $err if $err;
     $result = $r;
   },
-)->tap(on => error => sub{ fail $_[1] })->wait;
+)->catch(sub{ fail pop })->wait;
 
 is $result, 'Goodbye', 'correct updated result';
 
