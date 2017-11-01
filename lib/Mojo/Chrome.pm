@@ -261,6 +261,16 @@ The protocol itself is fairly new and largely undocumented, especially in usage 
 If this module skews from the protocol in newer versions of chrome please alert the author via the bug tracker.
 Incompatibilites can hopefully be smoothed out in the module however where this isn't possible the author intends to target newer versions of chrome rather than support a long tail of chrome version.
 
+=head1 CONNECTING AND SPAWNING
+
+This module attempts to connect and/or reconnect to Chrome's DevTools Protocol and even spawn an instance of Chrome so as to make that as seemless as possible to the user.
+Any method that sends a command will first check for a connection and if it doesn't exist attempt to create one.
+Further if a connection can't be made or if a port to connect on hasn't been specified it will spawn a new instance.
+In the case that no port was specified a random free port will be used.
+(Note that an additional randomly selected free port is used during startup and is then dropped once the startup is complete.)
+
+All this should be as transparent and "do what I mean" as possible.
+
 =head1 EVENTS
 
 L<Mojo::Chrome> inherits all of the events from L<Mojo::EventEmitter>.
