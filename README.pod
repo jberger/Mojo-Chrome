@@ -19,7 +19,7 @@ However with the increased power the author suspects that new short-cuts will be
 
 =head1 CAVEATS
 
-This module is nwe and changes may occur.
+This module is new and changes may occur.
 High level functionality should be fairly stable.
 
 The protocol itself is fairly new and largely undocumented, especially in usage documentation.
@@ -72,6 +72,46 @@ The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
 =head2 ua
 
 The L<Mojo::UserAgent> object used to open the connection to chrome if necessary.
+
+=head1 METHODS
+
+L<Mojo::Chrome> inherits all of the methods from L<Mojo::EventEmitter> and implements the following new ones.
+
+=head2 evaluate
+
+  $chrome->evaluate('JS', sub { my ($chrome, $error, $value) = @_; ... });
+    Array.from(document.getElementsByTagName('p')).map(e => e.innerText);
+  JS
+
+Evaluate a javascript snippet and return the result of the last statement.
+If passed a hash reference this is assumed to be arguments passed to DevTools' L<Runtime.evaluate|https://chromedevtools.github.io/devtools-protocol/tot/Runtime/#method-evaluate>.
+Otherwise the value is assumed to be the expression (and the C<returnByValue> option will be set to true).
+The callback will receive the invocant, any error, then the value of the last evaluated statement.
+
+Note that other complex behaviors are possible when explicitly passing your own arguments, so please investigate those if this behavior seems limiting.
+
+=head2 load_page
+
+  $chrome->load_page($url, sub { my ($chrome, $error) = @_; ... });
+
+Request a page and load the result, evaluating any initial javascript in the process.
+This subscribes to L<Page|https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-enable> events and then requests the page with L<Page.naviate|https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-navigate>.
+It then invokes the callback when the appropriate L<Page.frameStoppedLoading|https://chromedevtools.github.io/devtools-protocol/tot/Page/#event-frameStoppedLoading> event is caught.
+
+If passed a hash reference this is assumed to the the arguments passed to the C<Page.navigate> method.
+Otherwise the value is assumed to the be url to load.
+If the url (given either way) is relative, it will be made absolute using the L</base> url.
+
+=head2 send_command
+
+  $chrome->send_command($method, $params, sub { my ($chrome, $error, $result) = @_; ... });
+
+A lower level method to send a command via the protocol.
+The arguments are a method and a hash reference of parameters.
+If given, a callback will be invoked when a response is received (N.B. issuing ids and watching for responses is handled transparently internally).
+The callback is passed the invocant, any error, and the result.
+
+This method lets you interact with the protocol and while it does simplify some of that process it is still quite low level.
 
 =head1 PROTOCOL DOCUMENTATION
 
