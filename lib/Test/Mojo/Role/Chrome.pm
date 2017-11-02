@@ -69,3 +69,54 @@ sub chrome_result_is {
 
 1;
 
+=head1 NAME
+
+Test::Mojo::Role::Chrome - Chrome for your testing
+
+=head1 SYNOPSIS
+
+
+  use Mojolicious::Lite;
+
+  use Test::More;
+
+  any '/' => 'index';
+
+  my $t = Test::Mojo->with_roles('+Chrome')->new;
+
+  $t->chrome_load_ok('/')
+    ->chrome_evaluate_ok(q[document.getElementById('name').innerHTML])
+    ->chrome_result_is('Bender');
+
+  done_testing;
+
+  __DATA__
+
+  @@ index.html.ep
+
+  <!DOCTYPE html>
+  <html>
+    <head></head>
+    <body>
+      <p id="name">Leela</p>
+      <script>
+        (function(){ document.getElementById('name').innerHTML = 'Bender' })();
+      </script>
+    </body>
+  </html>
+
+=head1 DESCRIPTION
+
+L<Test::Mojo::Role::Phantom> adds the ability to test front-end behavior to your L<Test::Mojo> instance.
+It uses L<Mojo::Chrome> to interface to the Chrome DevTools Protocol as its backbone.
+
+This module is the spiritual successor to L<Test::Mojo::Role::Phantom> which interfaced with the headless phantomjs application.
+That project was abandoned after the headless chrome functionality was announced.
+
+L<Test::Mojo::Role::Phantom> and L<Mojo::Phantom> had many short-cuts that were intended to smooth out the experience since communication was essentially unidirectional after the page load and the process or at least the page state was ephemeral.
+Because of the robust communication afforded by the Chrome DevTools Protocol many of those short-cuts will not be replicated for C<Test::Mojo::Role::Chome>.
+However with the increased power the author suspects that new short-cuts will be desirable, suggestions are welcome.
+
+As this module is new as is the protocol, please familiarize yourself with the L<Mojo::Chrome/Caveats> before using.
+
+
