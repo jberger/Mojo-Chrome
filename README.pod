@@ -90,10 +90,27 @@ The L<Mojo::UserAgent> object used to open the connection to chrome if necessary
   my $path = Mojo::Chrome->detect_chrome_executable;
 
 Returns the path of the chrome executable to be used.
+The following heuristic is used:
+
+=over
+
+=item *
+
 If the environment variable C<MOJO_CHROME_EXECUTABLE> is set that is immediately returned, no check is performed.
+
+=item *
+
 If an executable file named C<google-chrome> exists in your PATH (as determined by L<IPC::Cmd/can_run>) and is executable, then that path is returned.
+
+=item *
+
 If the system is C<darwin> (i.e. Mac), then if C</Applications/Google Chrome.app/Contents/MacOS/Google Chrome> exists and is executable, then that path is returned.
+
+=item *
+
 Otherwise returns C<undef>.
+
+=back
 
 =head1 METHODS
 
