@@ -3,9 +3,9 @@ use v5.16.0;
 use Module::Build::Tiny 0;
 
 use lib 'lib';
-use Mojo::Chrome::Util;
+use Mojo::Chrome;
 
-unless (Mojo::Chrome::Util::chrome_executable()) {
+unless (Mojo::Chrome->detect_chrome_executable()) {
   warn "chrome executable is required to install Mojo::Chrome.\n";
   warn "Please install chrome or specify the path using the MOJO_CHROME_EXECUTABLE environment variable\n";
   exit 0+!$ENV{AUTOMATED_TESTING}; # exit 0 on cpan testers, non-zero elsewise

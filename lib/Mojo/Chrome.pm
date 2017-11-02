@@ -8,7 +8,7 @@ our $VERSION = '0.01';
 $VERSION = eval $VERSION;
 
 use Carp ();
-use Mojo::Chrome::Util;
+use IPC::Cmd ();
 use Mojo::IOLoop;
 use Mojo::IOLoop::Server;
 use Mojo::URL;
@@ -20,13 +20,28 @@ use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
 
 has base => sub { Mojo::URL->new };
 has chrome_path => sub {
-  Mojo::Chrome::Util::chrome_executable()
+  shift->detect_chrome_executable()
     or Carp::croak 'chrome_path not set and could not be determined';
 };
 has chrome_options => sub { ['--headless' ] }; # '--disable-gpu'
 has host => '127.0.0.1';
 has [qw/port tx/];
 has ua   => sub { Mojo::UserAgent->new };
+
+sub detect_chrome_executable {
+  # class method, no args
+  return $ENV{MOJO_CHROME_EXECUTABLE} if $ENV{MOJO_CHROME_EXECUTABLE};
+
+  my $path = IPC::Cmd::can_run 'google-chrome';
+  return $path if $path && -f $path && -x _;
+
+  if ($^O eq 'darwin') {
+    $path = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    return $path if $path && -f $path && -x _;
+  }
+
+  return undef;
+}
 
 # high level method to evaluate jacascript in the page context
 # error is structured, Mojo::Chrome errors are upgraded to it with exceptionId set to -1
@@ -317,6 +332,18 @@ The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
 =head2 ua
 
 The L<Mojo::UserAgent> object used to open the connection to chrome if necessary.
+
+=head1 CLASS METHODS
+
+=head2 detect_chrome_executable
+
+  my $path = Mojo::Chrome->detect_chrome_executable;
+
+Returns the path of the chrome executable to be used.
+If the environment variable C<MOJO_CHROME_EXECUTABLE> is set that is immediately returned, no check is performed.
+If an executable file named C<google-chrome> exists in your PATH (as determined by L<IPC::Cmd/can_run>) and is executable, then that path is returned.
+If the system is C<darwin> (i.e. Mac), then if C</Applications/Google Chrome.app/Contents/MacOS/Google Chrome> exists and is executable, then that path is returned.
+Otherwise returns C<undef>.
 
 =head1 METHODS
 
