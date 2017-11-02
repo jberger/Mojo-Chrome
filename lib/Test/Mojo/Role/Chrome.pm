@@ -140,8 +140,30 @@ L<Test::Mojo::Role::Chrome> composes the following methods into the consuming cl
 
 =head2 chrome_load_ok
 
+  $t = $t->chrome_load_ok($url, $description);
+
+Load a page, successful if the page loads.
+The first arugment can be a url/string or a hash reference as described in L<Mojo::Chome/load_page>.
+An optional description can be passed as the second argument.
+
 =head2 chrome_evaluate_ok
 
+  $t = $t->chrome_evaluate_ok($js, $description);
+
+Evaluate a javascript snippet, successful if the evaluation succeeds.
+The result is stored in L</chrome_result>.
+The first argument can be a javascript snippet or a hash reference as described in L<Mojo::Chrome/evaluate>.
+An optional description can be passed as the second argument.
+
 =head2 chrome_result_is
+
+  $t = $t->chrome_evaluate_ok($expected);
+  $t = $t->chrome_evaluate_ok($pointer, $expected);
+  $t = $t->chrome_evaluate_ok($pointer, $expected, $description);
+  $t = $t->chrome_evaluate_ok('', $expected, $description);
+
+Check a result, gotten from L</chrome_evaluate_ok> and stored in L</chrome_result>, using L<Test::More/is_deeply>.
+Takes an optional JSON Pointer, data to compare against, and an optional description.
+If two arguments are passed those are assumed to be a pointer and comparison data, to give a description without a pointer, use the root pointer C<''>.
 
 
