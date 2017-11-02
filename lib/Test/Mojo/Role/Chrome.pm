@@ -7,6 +7,8 @@ use Mojo::Util;
 use Test2::API ();
 use Test::More ();
 
+requires(qw/ua success/);
+
 __PACKAGE__->Mojo::Base::attr(chrome => sub {
   Mojo::Chrome->new(base => shift->ua->server->nb_url);
 });
