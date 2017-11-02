@@ -121,4 +121,27 @@ However with the increased power the author suspects that new short-cuts will be
 
 As this module is new as is the protocol, please familiarize yourself with the L<Mojo::Chrome/Caveats> before using.
 
+=head1 ATTRIBUTES
+
+L<Test::Mojo::Role::Chrome> composes the following attributes into the consuming class.
+
+=head2 chrome
+
+The instance of L<Mojo::Chrome> used to for testing.
+Defaults to a new instance with the L<Mojo::Chrome/base> set appropriately to address the tested application's server on relative requests.
+
+=head2 chrome_result
+
+The result of the previous call to L</chrome_evaluate_ok>.
+
+=head1 METHODS
+
+L<Test::Mojo::Role::Chrome> composes the following methods into the consuming class.
+
+=head2 chrome_load_ok
+
+=head2 chrome_evaluate_ok
+
+=head2 chrome_result_is
+
 
