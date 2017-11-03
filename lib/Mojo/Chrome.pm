@@ -217,7 +217,7 @@ sub _spawn {
     ->get('/' => sub {
       my $c = shift;
       say STDERR 'Got start server request from chrome' if DEBUG;
-      $c->tx->on(finish => sub { $self->$cb(); undef $start_server; });
+      $c->tx->on(finish => sub { $self->$cb(undef); undef $start_server; });
       $c->rendered(204);
     });
   my $start_port = $start_server->listen(["http://127.0.0.1"])->start->ports->[0];
