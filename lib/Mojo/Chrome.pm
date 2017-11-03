@@ -23,7 +23,7 @@ has chrome_path => sub {
   shift->detect_chrome_executable()
     or Carp::croak 'chrome_path not set and could not be determined';
 };
-has chrome_options => sub { ['--headless' ] }; # '--disable-gpu'
+has chrome_options => sub { [ '--headless' ] }; # '--disable-gpu'
 has host => '127.0.0.1';
 has [qw/port tx/];
 has ua   => sub { Mojo::UserAgent->new };
