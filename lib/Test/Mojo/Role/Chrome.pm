@@ -109,7 +109,7 @@ Test::Mojo::Role::Chrome - Chrome for your testing
 
 =head1 DESCRIPTION
 
-L<Test::Mojo::Role::Phantom> adds the ability to test front-end behavior to your L<Test::Mojo> instance.
+L<Test::Mojo::Role::Chrome> adds the ability to test front-end behavior to your L<Test::Mojo> instance.
 It uses L<Mojo::Chrome> to interface to the Chrome DevTools Protocol as its backbone.
 Note that this module can also test non-Mojolicious PSGI applications via L<Test::Mojo::Role::PSGI>.
 
