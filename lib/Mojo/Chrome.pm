@@ -412,6 +412,16 @@ This method lets you interact with the protocol and while it does simplify some 
 
 =back
 
+=head1 SEE ALSO
+
+=over
+
+=item L<Test::Mojo::Role::Chrome>
+
+=item L<Mojolicious>
+
+=back
+
 =head1 SOURCE REPOSITORY
 
 L<http://github.com/jberger/Mojo-Chrome>

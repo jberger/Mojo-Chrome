@@ -111,6 +111,7 @@ Test::Mojo::Role::Chrome - Chrome for your testing
 
 L<Test::Mojo::Role::Phantom> adds the ability to test front-end behavior to your L<Test::Mojo> instance.
 It uses L<Mojo::Chrome> to interface to the Chrome DevTools Protocol as its backbone.
+Note that this module can also test non-Mojolicious PSGI applications via L<Test::Mojo::Role::PSGI>.
 
 This module is the spiritual successor to L<Test::Mojo::Role::Phantom> which interfaced with the headless phantomjs application.
 That project was abandoned after the headless chrome functionality was announced.
@@ -166,4 +167,19 @@ Check a result, gotten from L</chrome_evaluate_ok> and stored in L</chrome_resul
 Takes an optional JSON Pointer, data to compare against, and an optional description.
 If two arguments are passed those are assumed to be a pointer and comparison data, to give a description without a pointer, use the root pointer C<''>.
 
+=head1 SEE ALSO
+
+=over
+
+=item L<Test::Mojo>
+
+=item L<Test::Mojo::Role::Selenium>
+
+Another front-end test system for the L<Test::Mojo> system
+
+=item L<Test::Mojo::Role::PSGI>
+
+Test non-Mojolicious PSGI applications using the L<Test::Mojo> system
+
+=back
 
