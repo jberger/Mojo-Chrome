@@ -9,7 +9,8 @@ my $t = Test::Mojo->with_roles('+Chrome')->new;
 
 $t->chrome_load_ok('/')
   ->chrome_evaluate_ok(q!document.getElementsByTagName('p')[0].innerHTML!)
-  ->chrome_result_is('Goodbye');
+  ->chrome_result_is('Goodbye')
+  ->chrome_result_like(qr/bye/);
 
 done_testing;
 

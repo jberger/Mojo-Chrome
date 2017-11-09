@@ -65,6 +65,17 @@ sub chrome_result_is {
   $self;
 }
 
+sub chrome_result_like {
+  my $self = shift;
+  my ($p, $regex) = @_ > 1 ? (shift, shift) : ('', shift);
+  my $desc = $_desc->(shift, qq{similar match for JSON Pointer "$p"});
+  my $data = Mojo::JSON::Pointer->new($self->chrome_result)->get($p);
+
+  my $ctx = Test2::API::context();
+  $self->success(Test::More::like($data, $regex, $desc));
+  $ctx->release;
+  $self;
+}
 
 1;
 
