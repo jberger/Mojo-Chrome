@@ -1,7 +1,6 @@
 package Test::Mojo::Role::Chrome;
+use Mojo::Base -role;
 
-use Role::Tiny;
-use Mojo::Base -strict;
 use Mojo::Chrome;
 use Mojo::Util;
 use Test2::API ();
@@ -9,10 +8,8 @@ use Test::More ();
 
 requires(qw/ua success/);
 
-__PACKAGE__->Mojo::Base::attr(chrome => sub {
-  Mojo::Chrome->new(base => shift->ua->server->nb_url);
-});
-__PACKAGE__->Mojo::Base::attr('chrome_result');
+has chrome => sub { Mojo::Chrome->new(base => shift->ua->server->nb_url) };
+has 'chrome_result';
 
 my $_desc = sub { Mojo::Util::encode 'UTF-8', shift || shift };
 
