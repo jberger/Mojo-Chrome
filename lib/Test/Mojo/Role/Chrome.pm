@@ -166,14 +166,25 @@ An optional description can be passed as the second argument.
 
 =head2 chrome_result_is
 
-  $t = $t->chrome_evaluate_ok($expected);
-  $t = $t->chrome_evaluate_ok($pointer, $expected);
-  $t = $t->chrome_evaluate_ok($pointer, $expected, $description);
-  $t = $t->chrome_evaluate_ok('', $expected, $description);
+  $t = $t->chrome_result_is($expected);
+  $t = $t->chrome_result_is($pointer, $expected);
+  $t = $t->chrome_result_is($pointer, $expected, $description);
+  $t = $t->chrome_result_is('', $expected, $description);
 
 Check a result, gotten from L</chrome_evaluate_ok> and stored in L</chrome_result>, using L<Test::More/is_deeply>.
 Takes an optional JSON Pointer, data to compare against, and an optional description.
 If two arguments are passed those are assumed to be a pointer and comparison data, to give a description without a pointer, use the root pointer C<''>.
+
+=head2 chrome_result_like
+
+  $t = $t->chrome_result_like($expected);
+  $t = $t->chrome_result_like($pointer, $regex);
+  $t = $t->chrome_result_like($pointer, $regex, $description);
+  $t = $t->chrome_result_like('', $regex, $description);
+
+Check a result, gotten from L</chrome_evaluate_ok> and stored in L</chrome_result>, using L<Test::More/like>.
+Takes an optional JSON Pointer, regex (C<qr//>) to compare against, and an optional description.
+If two arguments are passed those are assumed to be a pointer and a regex, to give a description without a pointer, use the root pointer C<''>.
 
 =head1 SEE ALSO
 
