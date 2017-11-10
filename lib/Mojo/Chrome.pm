@@ -26,7 +26,7 @@ has chrome_path => sub {
 };
 has 'tx';
 has ua  => sub { Mojo::UserAgent->new };
-has url => sub { Mojo::URL->new('http://127.0.0.1?headless') };
+has url => sub { Mojo::URL->new('http://127.0.0.1/?headless') };
 
 sub detect_chrome_executable {
   # class method, no args
@@ -363,7 +363,7 @@ The L<Mojo::UserAgent> object used to open the connection to chrome if necessary
 =head2 url
 
 A L<Mojo::URL> indicating where to connect to an existing chrome.
-The default is C<http://127.0.0.1?headless>.
+The default is C<http://127.0.0.1/?headless>.
 
 Note that if a port is not specified (as it is not for the default) a new chrome will be spawned on a random port.
 Query parameters are used as arguments to the executable, therefore the default is C<--headless>.
