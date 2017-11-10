@@ -20,10 +20,6 @@ use Scalar::Util ();
 use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
 
 has base => sub { Mojo::URL->new };
-has chrome_path => sub {
-  shift->detect_chrome_executable()
-    or Carp::croak 'chrome_path not set and could not be determined';
-};
 has 'tx';
 has ua  => sub { Mojo::UserAgent->new };
 has url => sub { Mojo::URL->new('http://127.0.0.1/?headless') };
@@ -223,16 +219,23 @@ sub _spawn {
     });
   my $start_port = $start_server->listen(["http://127.0.0.1"])->start->ports->[0];
 
-  my $ws_port = $self->url->port;
-  unless ($ws_port) {
+  my $url  = $self->url->clone;
+  my $port = $url->port;
+  unless ($port) {
     # if the user didn't designate the port then generate one
     # we store it so that we can connect again later if the connection is lost
     # however it will be removed if the process is killed
-    $ws_port = $self->{port} = Mojo::IOLoop::Server->generate_port;
+    $port = $self->{port} = Mojo::IOLoop::Server->generate_port;
   }
 
-  my @options = List::Util::pairmap { "--$a" . (length $b ? "=$b" : '') } @{ $self->url->query->pairs };
-  my @command = ($self->chrome_path, @options, "--remote-debugging-port=$ws_port", "http://127.0.0.1:$start_port");
+  # executable
+  my $params = $url->query;
+  Carp::croak 'chrome_path not set and could not be determined'
+    unless my $exe = $params->param('executable') || $self->detect_chrome_executable;
+  $params->remove('executable');
+
+  my @options = List::Util::pairmap { "--$a" . (length $b ? "=$b" : '') } @{ $params->pairs };
+  my @command = ($exe, @options, "--remote-debugging-port=$port", "http://127.0.0.1:$start_port");
   say STDERR 'Spawning: ' . (join ', ', map { "'$_'" } @command) if DEBUG;
   $self->{pid} = open $self->{pipe}, '-|', @command;
 
@@ -347,11 +350,6 @@ L<Mojo::Chrome> inherits all of the attributes from L<Mojo::EventEmitter> and im
 A base url used to make relative urls absolute.
 Must be an instance of L<Mojo::URL> or api compatible class.
 
-=head2 chrome_path
-
-Path to the chrome executable.
-Default is to use L</detect_chrome_executable> to discover it.
-
 =head2 tx
 
 The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
@@ -365,8 +363,17 @@ The L<Mojo::UserAgent> object used to open the connection to chrome if necessary
 A L<Mojo::URL> indicating where to connect to an existing chrome.
 The default is C<http://127.0.0.1/?headless>.
 
-Note that if a port is not specified (as it is not for the default) a new chrome will be spawned on a random port.
-Query parameters are used as arguments to the executable, therefore the default is C<--headless>.
+The host portion is the host to connect to (the default is the current host).
+The port is the port to connect on, if one is not specified a new chrome process will be spawned on a random port.
+If the port is specifed but cannot be contacted then a new chrome process will be spawned using that port.
+
+Query parameters are available to control the spawned chrome process.
+The C<executable> parameter is the name of the binary (if it is in your C<$PATH>) or path to your chrome executable.
+If this is not given L</detect_chrome_executable> is used.
+
+All other parameters are interpreted as command line switches.
+Therefore the default is C<--headless>.
+Note that C<remote_debugging_port> should not be given as it is already used by the port handling above.
 A useful option to consider is C<disable-gpu> which is not enabled by default.
 
 =head1 CLASS METHODS
