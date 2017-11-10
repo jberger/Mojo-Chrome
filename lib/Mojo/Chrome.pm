@@ -24,9 +24,9 @@ has chrome_path => sub {
     or Carp::croak 'chrome_path not set and could not be determined';
 };
 has chrome_options => sub { [ '--headless' ] }; # '--disable-gpu'
-has host => '127.0.0.1';
-has [qw/port tx/];
+has 'tx';
 has ua   => sub { Mojo::UserAgent->new };
+has url => sub { Mojo::URL->new('http://127.0.0.1') };
 
 sub detect_chrome_executable {
   # class method, no args
@@ -126,10 +126,11 @@ sub _connect {
       my $delay = shift;
 
       # there can't be a targeted running chrome if there is no port
-      return $delay->pass(undef) unless my $port = $self->port;
+      my $url = $self->url;
+      return $delay->pass(undef) unless my $port = $url->port || $self->{port};
 
       # otherwise try to connect to an existing chrome (perhaps one we've already spawned)
-      my $url = Mojo::URL->new->host($self->host)->port($port)->scheme('http')->path('/json');
+      $url = $url->clone->port($port)->path('/json');
       say STDERR "Initial request to chrome: $url" if DEBUG;
       $self->ua->get($url, $delay->begin);
     },
@@ -183,7 +184,7 @@ sub _kill {
   kill KILL => $pid;
   waitpid $pid, 0;
   delete $self->{pipe};
-  delete $self->{port} if delete $self->{port_generated};
+  delete $self->{port};
 }
 
 sub _send {
@@ -222,12 +223,12 @@ sub _spawn {
     });
   my $start_port = $start_server->listen(["http://127.0.0.1"])->start->ports->[0];
 
-  my $ws_port = $self->port;
+  my $ws_port = $self->url->port;
   unless ($ws_port) {
     # if the user didn't designate the port then generate one
-    # and note that it was generated so we can clean it up later
-    $self->{port_generated} = 1;
-    $ws_port = $self->port(Mojo::IOLoop::Server->generate_port)->port;
+    # we store it so that we can connect again later if the connection is lost
+    # however it will be removed if the process is killed
+    $ws_port = $self->{port} = Mojo::IOLoop::Server->generate_port;
   }
 
   my @command = ($self->chrome_path, @{ $self->chrome_options }, "--remote-debugging-port=$ws_port", "http://127.0.0.1:$start_port");
@@ -355,17 +356,6 @@ Default is to use L</detect_chrome_executable> to discover it.
 An array reference containing additional command line arguments to pass when executing chrome.
 The default includes C<--headless>, it does not include C<--disable-gpu> thought that is a common usage.
 
-=head2 host
-
-The IP address of the host running chrome.
-By default this is C<127.0.0.1>, namely the current host.
-
-=head2 port
-
-The port of the chrome process.
-The default is to open an unused port.
-This should be specified if a remote chrome instance (see C</host>).
-
 =head2 tx
 
 The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
@@ -373,6 +363,12 @@ The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
 =head2 ua
 
 The L<Mojo::UserAgent> object used to open the connection to chrome if necessary.
+
+=head2 url
+
+A L<Mojo::URL> indicating where to connect to an existing chrome.
+The default is C<http://127.0.0.1>.
+Note that if a port is not specified (as it is not for the default) a new chrome will be spawned on a random port.
 
 =head1 CLASS METHODS
 
