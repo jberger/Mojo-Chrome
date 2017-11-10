@@ -9,6 +9,7 @@ $VERSION = eval $VERSION;
 
 use Carp ();
 use IPC::Cmd ();
+use List::Util ();
 use Mojo::IOLoop;
 use Mojo::IOLoop::Server;
 use Mojo::URL;
@@ -23,10 +24,9 @@ has chrome_path => sub {
   shift->detect_chrome_executable()
     or Carp::croak 'chrome_path not set and could not be determined';
 };
-has chrome_options => sub { [ '--headless' ] }; # '--disable-gpu'
 has 'tx';
-has ua   => sub { Mojo::UserAgent->new };
-has url => sub { Mojo::URL->new('http://127.0.0.1') };
+has ua  => sub { Mojo::UserAgent->new };
+has url => sub { Mojo::URL->new('http://127.0.0.1?headless') };
 
 sub detect_chrome_executable {
   # class method, no args
@@ -130,7 +130,7 @@ sub _connect {
       return $delay->pass(undef) unless my $port = $url->port || $self->{port};
 
       # otherwise try to connect to an existing chrome (perhaps one we've already spawned)
-      $url = $url->clone->port($port)->path('/json');
+      $url = $url->clone->port($port)->path('/json')->query('');
       say STDERR "Initial request to chrome: $url" if DEBUG;
       $self->ua->get($url, $delay->begin);
     },
@@ -231,7 +231,8 @@ sub _spawn {
     $ws_port = $self->{port} = Mojo::IOLoop::Server->generate_port;
   }
 
-  my @command = ($self->chrome_path, @{ $self->chrome_options }, "--remote-debugging-port=$ws_port", "http://127.0.0.1:$start_port");
+  my @options = List::Util::pairmap { "--$a" . (length $b ? "=$b" : '') } @{ $self->url->query->pairs };
+  my @command = ($self->chrome_path, @options, "--remote-debugging-port=$ws_port", "http://127.0.0.1:$start_port");
   say STDERR 'Spawning: ' . (join ', ', map { "'$_'" } @command) if DEBUG;
   $self->{pid} = open $self->{pipe}, '-|', @command;
 
@@ -351,11 +352,6 @@ Must be an instance of L<Mojo::URL> or api compatible class.
 Path to the chrome executable.
 Default is to use L</detect_chrome_executable> to discover it.
 
-=head2 chrome_options
-
-An array reference containing additional command line arguments to pass when executing chrome.
-The default includes C<--headless>, it does not include C<--disable-gpu> thought that is a common usage.
-
 =head2 tx
 
 The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
@@ -367,8 +363,11 @@ The L<Mojo::UserAgent> object used to open the connection to chrome if necessary
 =head2 url
 
 A L<Mojo::URL> indicating where to connect to an existing chrome.
-The default is C<http://127.0.0.1>.
+The default is C<http://127.0.0.1?headless>.
+
 Note that if a port is not specified (as it is not for the default) a new chrome will be spawned on a random port.
+Query parameters are used as arguments to the executable, therefore the default is C<--headless>.
+A useful option to consider is C<disable-gpu> which is not enabled by default.
 
 =head1 CLASS METHODS
 
