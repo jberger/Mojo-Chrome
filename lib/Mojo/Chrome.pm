@@ -276,6 +276,12 @@ The protocol itself is fairly new and largely undocumented, especially in usage 
 If this module skews from the protocol in newer versions of chrome please alert the author via the bug tracker.
 Incompatibilites can hopefully be smoothed out in the module however where this isn't possible the author intends to target newer versions of chrome rather than support a long tail of chrome version.
 
+Errors are basically the wild west.
+While methods should have error slots where errors should arrive, whether they do or not is up in the air.
+This is especially true of errors that eminate from within the protocol itself.
+Certainly this will need to be improved but it is difficult with the protocol documentation in its current state.
+Pull requests and other constructive comments are always welcome.
+
 =head1 CONNECTING AND SPAWNING
 
 This module attempts to connect and/or reconnect to Chrome's DevTools Protocol and even spawn an instance of Chrome so as to make that as seemless as possible to the user.
