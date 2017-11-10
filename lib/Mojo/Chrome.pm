@@ -348,7 +348,7 @@ Must be an instance of L<Mojo::URL> or api compatible class.
 =head2 chrome_path
 
 Path to the chrome executable.
-Default is to use L<Mojo::Chrome::Util/chrome_executable> to discover it.
+Default is to use L</detect_chrome_executable> to discover it.
 
 =head2 chrome_options
 
