@@ -19,10 +19,15 @@ use Scalar::Util ();
 
 use constant DEBUG => $ENV{MOJO_CHROME_DEBUG};
 
+has [qw/tx/];
+has arguments => sub { ['--headless'] };
 has base => sub { Mojo::URL->new };
-has 'tx';
+has executable => sub {
+  shift->detect_chrome_executable()
+    or Carp::croak 'executable not set and could not be determined';
+};
 has ua  => sub { Mojo::UserAgent->new };
-has url => sub { Mojo::URL->new('http://127.0.0.1/?headless') };
+has target => sub { Mojo::URL->new('http://127.0.0.1') };
 
 sub detect_chrome_executable {
   # class method, no args
@@ -99,6 +104,35 @@ sub load_page {
   )->catch(sub{ $self->$cb(pop) });
 }
 
+sub from_url {
+  my ($self, $url) = @_;
+  $url = Mojo::URL->new("$url");
+
+  # target
+  my $target = Mojo::URL->new;
+  $target->$_($url->$_()) for qw/scheme host port/;
+  $self->target($target);
+
+  # executable
+  my $params = $url->query;
+  if (my $exe = $params->param('executable')) {
+    $self->executable($exe);
+    $params->remove('executable');
+  }
+
+  # arguments
+  my @options = List::Util::pairmap { "--$a" . (length $b ? "=$b" : '') } @{ $params->pairs };
+  $self->arguments(\@options) if @options;
+
+  return $self;
+}
+
+sub new {
+  my $self = shift;
+  return $self->SUPER::new->from_url($_[0]) if @_ == 1 && ref $_[0] ne 'HASH';
+  return $self->SUPER::new(@_);
+}
+
 sub send_command {
   my $cb = ref $_[-1] eq 'CODE' ? pop : sub {};
   my ($self, $method, $params) = @_;
@@ -122,7 +156,7 @@ sub _connect {
       my $delay = shift;
 
       # there can't be a targeted running chrome if there is no port
-      my $url = $self->url;
+      my $url = $self->target;
       return $delay->pass(undef) unless my $port = $url->port || $self->{port};
 
       # otherwise try to connect to an existing chrome (perhaps one we've already spawned)
@@ -219,7 +253,7 @@ sub _spawn {
     });
   my $start_port = $start_server->listen(["http://127.0.0.1"])->start->ports->[0];
 
-  my $url  = $self->url->clone;
+  my $url  = $self->target->clone;
   my $port = $url->port;
   unless ($port) {
     # if the user didn't designate the port then generate one
@@ -228,14 +262,7 @@ sub _spawn {
     $port = $self->{port} = Mojo::IOLoop::Server->generate_port;
   }
 
-  # executable
-  my $params = $url->query;
-  Carp::croak 'chrome_path not set and could not be determined'
-    unless my $exe = $params->param('executable') || $self->detect_chrome_executable;
-  $params->remove('executable');
-
-  my @options = List::Util::pairmap { "--$a" . (length $b ? "=$b" : '') } @{ $params->pairs };
-  my @command = ($exe, @options, "--remote-debugging-port=$port", "http://127.0.0.1:$start_port");
+  my @command = ($self->executable, @{ $self->arguments }, "--remote-debugging-port=$port", "http://127.0.0.1:$start_port");
   say STDERR 'Spawning: ' . (join ', ', map { "'$_'" } @command) if DEBUG;
   $self->{pid} = open $self->{pipe}, '-|', @command;
 
@@ -345,10 +372,23 @@ For the time being simply consider that fact, especially when disabling protocol
 
 L<Mojo::Chrome> inherits all of the attributes from L<Mojo::EventEmitter> and implements the following new ones.
 
+=head2 arguments
+
+An array reference of command line arguments passed to the L</executable> if a chrome process is spawned.
+Therefore the default contains only C<--headless>.
+Note that C<--remote_debugging_port> should not be given as it is already used by the port handling above.
+A useful option to consider is C<--disable-gpu> which is not enabled by default.
+
 =head2 base
 
 A base url used to make relative urls absolute.
 Must be an instance of L<Mojo::URL> or api compatible class.
+
+=head2 executable
+
+The name of the chrome executable (if it is in the C<$PATH>) or an absolute path to the chrome executable.
+Default is to use L</detect_chrome_executable> to discover it.
+If unset and not detectable, throws an exception when used.
 
 =head2 tx
 
@@ -358,23 +398,12 @@ The L<Mojo::Transaction> object maintaining the websocket connection to chrome.
 
 The L<Mojo::UserAgent> object used to open the connection to chrome if necessary.
 
-=head2 url
+=head2 target
 
-A L<Mojo::URL> indicating where to connect to an existing chrome.
-The default is C<http://127.0.0.1/?headless>.
-
-The host portion is the host to connect to (the default is the current host).
-The port is the port to connect on, if one is not specified a new chrome process will be spawned on a random port.
+An instance of L<Mojo::URL> (or api compatible class) used to contact a running process of chrome.
+If one is not specified a new chrome process will be spawned on a random port.
 If the port is specifed but cannot be contacted then a new chrome process will be spawned using that port.
-
-Query parameters are available to control the spawned chrome process.
-The C<executable> parameter is the name of the binary (if it is in your C<$PATH>) or path to your chrome executable.
-If this is not given L</detect_chrome_executable> is used.
-
-All other parameters are interpreted as command line switches.
-Therefore the default is C<--headless>.
-Note that C<remote_debugging_port> should not be given as it is already used by the port handling above.
-A useful option to consider is C<disable-gpu> which is not enabled by default.
+Default is C<http://127.0.0.1>.
 
 =head1 CLASS METHODS
 
@@ -422,6 +451,19 @@ The callback will receive the invocant, any error, then the value of the last ev
 
 Note that other complex behaviors are possible when explicitly passing your own arguments, so please investigate those if this behavior seems limiting.
 
+=head2 from_url
+
+  my $chrome = Mojo::Chrome->new->from_url($url);
+
+A shortcut to use a string or L<Mojo::URL> to set the arguments for this class (see also L</new>).
+
+The scheme, host, and port portions set the L</target> indicating where to connect to chrome's DevTools Protocol.
+
+Query parameters are available to control the spawned chrome process.
+If given, the C<executable> parameter is used to set the L</executable> otherwise the default is not changed.
+
+All other parameters are interpreted as command line switches and used to set the L</arguments>.
+
 =head2 load_page
 
   $chrome->load_page($url, sub { my ($chrome, $error) = @_; ... });
@@ -433,6 +475,16 @@ It then invokes the callback when the appropriate L<Page.frameStoppedLoading|htt
 If passed a hash reference this is assumed to the the arguments passed to the C<Page.navigate> method.
 Otherwise the value is assumed to the be url to load.
 If the url (given either way) is relative, it will be made absolute using the L</base> url.
+
+=head2 new
+
+  my $chrome = Mojo::Chrome->new(%attributes);
+  my $chrome = Mojo::Chrome->new(\%attributes);
+  my $chrome = Mojo::Chrome->new($url);
+
+Construct a new instance of L<Mojo::Chrome>.
+If given a single arugment which is not a hash reference that argument is passed to L</from_url> to create an instance from a url.
+Otherwise the usual L<Mojo::Base/new> behavior is followed.
 
 =head2 send_command
 
