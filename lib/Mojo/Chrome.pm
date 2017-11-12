@@ -120,9 +120,14 @@ sub from_url {
     $params->remove('executable');
   }
 
+  # headless / no-headless
+  $params->append('headless' => '')
+    unless defined $params->param('no-headless') || defined $params->param('headless');
+  $params->remove('no-headless');
+
   # arguments
   my @options = List::Util::pairmap { "--$a" . (length $b ? "=$b" : '') } @{ $params->pairs };
-  $self->arguments(\@options) if @options;
+  $self->arguments(\@options);
 
   return $self;
 }
@@ -376,8 +381,8 @@ L<Mojo::Chrome> inherits all of the attributes from L<Mojo::EventEmitter> and im
 
 An array reference of command line arguments passed to the L</executable> if a chrome process is spawned.
 Therefore the default contains only C<--headless>.
-Note that C<--remote_debugging_port> should not be given as it is already used by the port handling above.
 A useful option to consider is C<--disable-gpu> which is not enabled by default.
+Note that C<--remote_debugging_port> should not be given, use the L</target>'s port value instead.
 
 =head2 base
 
@@ -463,6 +468,9 @@ Query parameters are available to control the spawned chrome process.
 If given, the C<executable> parameter is used to set the L</executable> otherwise the default is not changed.
 
 All other parameters are interpreted as command line switches and used to set the L</arguments>.
+The parameter C<headless> is considered a default and is appended unless the parameter C<headless> or C<no-headless> is explicitly given.
+Note that C<no-headless> is not an official parameter but is added here to prevent the default of adding C<headless>.
+C<remote_debugging_port> should not be given, pass as the port part of the url instead.
 
 =head2 load_page
 
