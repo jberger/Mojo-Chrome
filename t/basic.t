@@ -1,6 +1,10 @@
 use Mojolicious::Lite;
 
 any '/' => 'main';
+any '/close' => sub {
+  my $c = shift;
+  $c->inactivity_timeout(0.1);
+};
 
 use Test::More;
 use Test::Mojo;
@@ -27,6 +31,14 @@ Mojo::IOLoop->delay(
 )->catch(sub{ fail pop })->wait;
 
 is $result, 'Goodbye', 'correct updated result';
+
+my $err;
+Mojo::IOLoop->delay(
+  sub { $chrome->load_page($url->clone->path('/close'), shift->begin) },
+  sub {
+    (undef, $err) = @_;
+  },
+)->catch(sub{ fail pop })->wait;
 
 done_testing;
 

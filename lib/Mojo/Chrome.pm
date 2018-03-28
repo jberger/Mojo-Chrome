@@ -90,7 +90,9 @@ sub load_page {
     sub {
       my ($delay, $err, $result) = @_;
       die $err if $err;
-      die 'No frameId was received'
+      die $result->{errorText}
+        if exists $result->{errorText};
+      die 'No frameId or errorText was received'
         unless my $frame_id = $result->{frameId};
       my $end = $delay->begin(0);
       $self->on('Page.frameStoppedLoading', sub {
