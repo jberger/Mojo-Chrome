@@ -54,6 +54,9 @@ However with the increased power the author suspects that new short-cuts will be
 
 =head1 CAVEATS
 
+B<WARNING:> Until released to CPAN this module is considered pre-alpha and absolutely no support or stability is promised.
+Not even what follows in this section of the documentation, which will only apply upon the first CPAN release.
+
 This module is new and changes may occur.
 High level functionality should be fairly stable.
 
