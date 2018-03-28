@@ -190,7 +190,7 @@ C<remote_debugging_port> should not be given, pass as the port part of the url i
   $chrome->load_page($url, sub { my ($chrome, $error) = @_; ... });
 
 Request a page and load the result, evaluating any initial javascript in the process.
-This subscribes to L<Page|https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-enable> events and then requests the page with L<Page.naviate|https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-navigate>.
+This subscribes to L<Page|https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-enable> events and then requests the page with L<Page.navigate|https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-navigate>.
 It then invokes the callback when the appropriate L<Page.frameStoppedLoading|https://chromedevtools.github.io/devtools-protocol/tot/Page/#event-frameStoppedLoading> event is caught.
 
 If passed a hash reference this is assumed to the the arguments passed to the C<Page.navigate> method.
