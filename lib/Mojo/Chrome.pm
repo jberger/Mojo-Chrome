@@ -172,7 +172,7 @@ sub _connect {
     sub {
       my ($delay, $tx) = @_;
 
-      unless ($tx && $tx->success) {
+      unless ($tx && !$tx->error) {
         # die if we already tried to spawn chrome
         die 'Initial request to chrome failed' if $self->{pid};
 
